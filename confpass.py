@@ -199,7 +199,13 @@ class pas:
         
         per_conf=(np.log(prob_ratio)**3)*A+np.log(prob_ratio)**2*B+C*np.log(prob_ratio)+D
         
-        self.confidence=round(per_conf,3)
+        if label == 0:
+            per_conf2=100-per_conf
+
+        else:
+            per_conf2=per_conf
+
+        self.confidence=round(per_conf2,3)
         
         
         ### print out the result
