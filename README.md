@@ -35,9 +35,9 @@ Random forest models are used in PART 2, class pas, with the following setting: 
 
 To be available soon
 
-## D.	Usage 
+## D.	Usage - Option 1: Execution as a command line
 
-Option 1: Execution as a command line
+
 i.e. python -m comfpass 
 
 ### Options:
@@ -188,8 +188,26 @@ If the radical structure and the pseudo structure from conformational searching 
  ```
 
 
+## E.	Usage - Option 2: import and use in python scripts or Jupyter notebooks 
+
+Please see CONFPASS_tutorial.ipynb for the user guide, tutorials and examples. Download and unzip the test_demo.zip file in user_guide/
+
+Here, we have taken out a simple example from the CONFPASS_tutorial.ipynb as a taster sample:
 
 
+
+```python
+## 1. Generate the priority list for a sdf file from a conformational searching calculation with 
+## the default setting -- x=0.8, x_de=0.2, method = 'pipe_x_de'
+
+test1=confpass.conp(['test_15.sdf'])
+test1.get_priority()
+
+## for conp.priority_df, the index of the conformer starts from 0
+test1.priority_df
+
+
+```
 
 
 
