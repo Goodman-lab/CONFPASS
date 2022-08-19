@@ -171,12 +171,12 @@ Single point energy output file: Name_idx_spe.out
 
 9.	Perform the pas test on multiple result folders under the same directory. The priority list is generated using the default setting. Generate a csv file to summarise the result.
 ```python
->>> python -m confpass --path ./test_demo --pas_multi --csv
+python -m confpass --path ./test_demo --pas_multi --csv
 ```
 
 10.	Perform the pas test on multiple result folders under the same directory. The priority list is generated using the default setting. Use the nor_nx=0.1 setting (aiming to find all the low energy conformer with ΔG < 1.4 kcal mol-1).
 ```python
->>> python -m confpass --path ./test_demo  --mx 0.1 --pas_multi
+python -m confpass --path ./test_demo  --mx 0.1 --pas_multi
  ```
  
 11.	Perform the pas test on a result folder for a radical species. The priority list is generated using the default setting.
@@ -184,7 +184,7 @@ Single point energy output file: Name_idx_spe.out
 If the radical structure and the pseudo structure from conformational searching are different, you will need to specify the removed atoms. ‘--pas_multi’ setting is currently not available for this type of radical structures.
 
 ```python
->>> python -m confpass --path ./radical_gu_liu1 --rmatom '[32]' --radical --pas
+python -m confpass --path ./radical_gu_liu1 --rmatom '[32]' --radical --pas
  ```
 
 
