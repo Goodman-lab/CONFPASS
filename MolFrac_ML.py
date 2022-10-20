@@ -86,7 +86,7 @@ def get_n0(mol_ls, cutoff=0.1):
 
 
 
-def get_new_mol_data(p_ls,csv_df,ideal_dict):
+def get_new_mol_data(p_ls,csv_df,ideal_dict,T=298.15):
     
     ## go through from reopt conf = 1 to n 
     
@@ -94,7 +94,7 @@ def get_new_mol_data(p_ls,csv_df,ideal_dict):
     
     sel_df_ls=[]
     for single_p_ls in p_ls:
-        sel_df=get_delG_df(single_p_ls,csv_df,ideal_dict,temperature=298.15)
+        sel_df=get_delG_df(single_p_ls,csv_df,ideal_dict,temperature=T)
         sel_df_ls.append(sel_df)
         
     del_mol_ls=[1]
@@ -163,7 +163,7 @@ def get_new_mol_data(p_ls,csv_df,ideal_dict):
     return result_df
 
 
-def get_just_norn(p_ls,csv_df,ideal_dict):
+def get_just_norn(p_ls,csv_df,ideal_dict, T=298.15):
     
     ## just calculate n0_molfac
     
@@ -171,7 +171,7 @@ def get_just_norn(p_ls,csv_df,ideal_dict):
     
     sel_df_ls=[]
     for single_p_ls in p_ls:
-        sel_df=get_delG_df(single_p_ls,csv_df,ideal_dict,temperature=298.15)
+        sel_df=get_delG_df(single_p_ls,csv_df,ideal_dict,temperature=T)
         sel_df_ls.append(sel_df)
         
     del_mol_ls=[1]
@@ -230,7 +230,7 @@ class MolFraTest_ml:
         
         
         
-    def NewMolfrac_df(self, just_norn='No'):
+    def NewMolfrac_df(self, just_norn='No', temp=298.15):
         
         
         ## take out the required information from the data frames 
@@ -254,11 +254,11 @@ class MolFraTest_ml:
             if just_norn=='No':
                 
                 ## calculate all the descriptors 
-                other_df=get_new_mol_data(other_select_ls[idx],self.delG_df_ls[idx],dict_ls[idx])
+                other_df=get_new_mol_data(other_select_ls[idx],self.delG_df_ls[idx],dict_ls[idx], temp)
             
             else:
                 ## only calculate n0_molfac
-                other_df=get_just_norn(other_select_ls[idx],self.delG_df_ls[idx],dict_ls[idx])
+                other_df=get_just_norn(other_select_ls[idx],self.delG_df_ls[idx],dict_ls[idx], temp)
                 
             other_df['name'] = self.molname_ls[idx]
             other_df_ls.append(other_df)
@@ -271,7 +271,7 @@ class MolFraTest_ml:
 ####################
 
 
-def get_descriptor(rmsCheck_df, priority_df, delG_df):
+def get_descriptor(rmsCheck_df, priority_df, delG_df, temp=298.15):
     
     ## using class MolFraTest_ml to generate desriptor df for a priority df 
     ## only applicable for one molecule at the time 
@@ -312,7 +312,7 @@ def get_descriptor(rmsCheck_df, priority_df, delG_df):
     
     ## test 2 MolFraTest_ml on the incomplete priority ls 
     test2=MolFraTest_ml(rmsCheck_df, priority_df_reopt, delG_df)
-    test2.NewMolfrac_df()
+    test2.NewMolfrac_df(temp=temp)
     
     
     descriptor_df1=pd.merge(test2.other_df, priority_df_reopt,on = 'name')
@@ -323,7 +323,7 @@ def get_descriptor(rmsCheck_df, priority_df, delG_df):
     
     descriptor_ary=descriptor_df2.to_numpy()
     
-    return descriptor_ary
+    return descriptor_ary, reopt_idx_ls1
 
 
 

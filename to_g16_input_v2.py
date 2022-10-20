@@ -98,7 +98,7 @@ def sdf2gjfs(filename,keywords,space, priority_ls, per, radical = False, rmAtom_
     select2 = priority_ls[:len_per_priority_ls]
     
     notselect = select[len_per_priority_ls:]
-    notselect2 = priority_ls[len_per_priority_ls:]
+    #notselect2 = priority_ls[len_per_priority_ls:]
 
     division4=[]
     for o in select2:
@@ -184,12 +184,14 @@ def sdf2gjfs_v2(filename,keywords,space,numbering, by_num='Yes', radical = False
         division3.append(content)    
     
     
+    name = filename.split('/')[-1][:-4]
+    
     if by_num=='No':
         
         filename_ls=[]
         num_ls=list(range(1,len(division3)+1))
         for idx in num_ls:
-            filename_ls.append(filename[:-4]+'_'+str(idx)+'.gjf')
+            filename_ls.append(name+'_'+str(idx)+'.gjf')
         
             #double check
         #for b,a in zip(filename_ls,division3):
@@ -213,7 +215,7 @@ def sdf2gjfs_v2(filename,keywords,space,numbering, by_num='Yes', radical = False
     
         filename_list2=[]
         for num2 in select1:
-            filename_list2.append(filename[:-4]+'_'+str(num2)+'.gjf')
+            filename_list2.append(name+'_'+str(num2)+'.gjf')
                
         for c,d in zip(filename_list2,division4):
             ## write the file
@@ -221,3 +223,9 @@ def sdf2gjfs_v2(filename,keywords,space,numbering, by_num='Yes', radical = False
             file = open(c, "w") 
             file.write(d) 
             file.close() 
+            
+            
+            
+            
+            
+            

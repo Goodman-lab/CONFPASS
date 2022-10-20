@@ -7,9 +7,12 @@ Created on Wed Jun 29 18:25:04 2022
 
 14072022 - update to accommodate radicals; update pas test - more nor_nmx options
 15082022 - update to change the pas test nor_nx setting and model -- 0.5 --> 0.99
+14092022 - include temperature variable for pas test; check the completion of the optimisation calculation;
+            pas.add_cal() function 
+            
 """
 
-__version__ = "v15082022"
+__version__ = "v14092022"
 
 import numpy as np
 from datetime import date
@@ -147,18 +150,20 @@ class pas:
             
         self.molf = molf
     
-    def make_prediction(self, p_x=0.8, p_x_as=0.2, p_n=3, p_method = 'pipe_x_as'):
+    def make_prediction(self, p_x=0.8, p_x_as=0.2, p_n=3, p_method = 'pipe_x_as', T=298.15, print_result=True):
         
         
         ## generate the priority list 
         ## sdf file located inside the directory in the path specify 
-        sdf_files = [self.path +'/'+ self.molname +'.sdf']
+        self.sdf_files = [self.path +'/'+ self.molname +'.sdf']
         
-        ptest = conp(sdf_files)
+        ptest = conp(self.sdf_files)
         ptest.get_priority(method = p_method, x=p_x, x_as=p_x_as, n= p_n)
         
+        self.priority_df=ptest.priority_df
+        
         ## generate the descriptor array 
-        descriptor_y =get_descriptor(self.rmsCheck_cluster_df, ptest.priority_df, self.delG_df)
+        descriptor_y, self.reopt_idx_ls =get_descriptor(self.rmsCheck_cluster_df, ptest.priority_df, self.delG_df,temp=T)
         
         ## make prediction 
         label= self.model.predict(descriptor_y)[0]
@@ -199,6 +204,7 @@ class pas:
         
         per_conf=(np.log(prob_ratio)**3)*A+np.log(prob_ratio)**2*B+C*np.log(prob_ratio)+D
         
+
         if label == 0:
             per_conf2=100-per_conf
 
@@ -207,12 +213,56 @@ class pas:
 
         self.confidence=round(per_conf2,3)
         
+
         
         ### print out the result
+        if print_result==True:
         
-        print('reoptimisation: '+ completion +'; confidence level: ' + str(self.confidence))
-        print('probability ratio: ' + str(self.prob_ratio))
+            print('reoptimisation: '+ completion +'; confidence level: ' + str(self.confidence))
+            print('probability ratio: ' + str(self.prob_ratio))
          
+        
+    def add_cal(self, keywords, space,  radical = False, rmAtom_ls=[], per = 0.1):
+        
+        
+        complete_priority_ls = self.priority_df['priority_ls'].tolist()[0]
+        left_ls = [i for i in complete_priority_ls if i not in self.reopt_idx_ls]
+        
+        
+        ## per = percentage of left_ls to be reoptimised in this round 
+        tobe_reopt_ls = left_ls[:round(len(complete_priority_ls)*per)]
+        tobe_reopt_ls2 = [i+1 for i in tobe_reopt_ls]
+        
+        ## create gjf files for DFT calculations based on tobe_reopt_ls
+        
+        if radical == True:
+            sdf2gjfs_v2(self.sdf_files[0], keywords, space, tobe_reopt_ls2, radical = True, rmAtom_ls=rmAtom_ls)
+        
+        else:
+
+            sdf2gjfs_v2(self.sdf_files[0], keywords, space, tobe_reopt_ls2)
+            
+        
+        ## update // generate a new summary file 
+        
+        complete_priority_ls2 = [i+1 for i in complete_priority_ls]
+        reopt_idx_ls2= [i+1 for i in self.reopt_idx_ls]
+        notselect = [i for i in complete_priority_ls2 if i not in reopt_idx_ls2 and i not in tobe_reopt_ls2]
+        
+        result_txt='CONFPASS - summary \n \n priority_ls: '+str(complete_priority_ls2)+'\n' 
+        result_txt+='\n optimised:'+str(reopt_idx_ls2)+'\n' 
+        result_txt+='\n To be optimised (with .gjf files generated):'+str(tobe_reopt_ls2)+'\n \n waitlisted: '
+        result_txt+=str(notselect)+ '\n \n Total number of conformers: '+str(len(complete_priority_ls2)) 
+        
+        if radical == True:
+            result_txt+='\n radical: '+ str(radical) 
+            result_txt+=' \n  rmAtom_ls: '+str(rmAtom_ls)
+        
+        
+        file = open(self.molname+'_summary.txt', "w") 
+        file.write(result_txt) 
+        file.close()
+        
         
         
 #########################################
@@ -263,6 +313,9 @@ def main():
     
     parser.add_option('--mx',dest='mx', help='nor_nx=mx; mol fraction', default='0.99',
                     choices=('0.1', '0.99'))
+    
+    parser.add_option('-T', help='Temperature setting (required for pas test)', 
+                  dest='T', default=298.15)
     
     
     ## for the radicals 
@@ -336,13 +389,13 @@ def main():
             
             test1 = pas(options.path)
             test1.preparation(molf=options.mx,ra=True, rm_ls=rmat_ls)
-            test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m)
+            test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
         
         else:
         
             test1 = pas(options.path)
             test1.preparation(molf=options.mx)
-            test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m)
+            test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
     
     
     elif  options.pas == False and options.pas_multi == True:
@@ -371,7 +424,7 @@ def main():
                 print(p)
                 test1 = pas(p)
                 test1.preparation(molf=options.mx)
-                test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m)
+                test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
             
                 name_ls.append(test1.molname)
                 label_ls.append(test1.label)

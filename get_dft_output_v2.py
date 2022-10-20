@@ -17,7 +17,7 @@ from rdkit import Chem
 #import numpy as np 
 #import math
 
-def check(filename, typ='ground'):
+def check(filename):
     
     ## open the output file 
     output_line=[]
@@ -67,36 +67,28 @@ def check(filename, typ='ground'):
         
     
     
+    
+    freq_check=False
+
+    if Freq_no1>0 and Freq_no2>0:
+        freq_check=True
+
+    
     ## assign: fail or pass 
+    ## asign: error
     
-    TS_check=False
-    ground_check=False
-
-    if Freq_no1>0 and Freq_no2>0 and opt_check==True:
-        ground_check=True
-
-    if Freq_no1<0 and Freq_no2>0 and opt_check==True:
-        TS_check=True
-
-    
+    error = 'no error'    
     check='Fail'
 
-    if typ =='TS':
-        if TS_check==True and ground_check==False:
-            check='Pass'
-
-    if typ =='ground':
-        if TS_check==False and ground_check==True:
-            check='Pass'
+    if freq_check==True and opt_check==True:
+        check='Pass'
+        
+    elif freq_check==False and opt_check==True:
+        error = 'frequency error'
+        
+    elif opt_check==False:
+        error = 'optimisation error'
     
-    ## asign: error 
-    error = 'no error'
-    
-    if check == 'Fail':
-        error = 'other errors'
-    
-    if opt_check==False:
-        error = 'opt error'
             
     return check, error
 
@@ -432,8 +424,8 @@ def get_g16sdf(path, radical = False, rmAtom_ls=[]):
             output_line.append(line)
 
     end_idx=output_line.index('M  END\n')
-    atom_no=int(output_line[3].split()[0])
-
+    #atom_no=int(output_line[3].split()[0])
+    atom_no=int(output_line[3][:3])
 
     ## import g16 output info 
     group_name=path.split('/')[-1]
@@ -443,9 +435,11 @@ def get_g16sdf(path, radical = False, rmAtom_ls=[]):
     pass_ls = []
 
     for f in opt_files:
-        result = check(path+'/'+f, typ='ground')
-        if result[0] == 'Pass':
+        chk,err = check(path+'/'+f)
+        if chk == 'Pass':
             pass_ls.append(f)
+        elif chk == 'Fail':
+            print(f+': '+err)
 
     ## get xyz in the right format 
     get_xyz_lines_format_ls=[]

@@ -163,7 +163,12 @@ def dihedral_df(sdf_file, dihedral_list, bond_list):
     END_index_list =[k for k,d in enumerate(sdf_output) if d=='M  END\n']
     #print(END_index_list)
     
-    atom_no=int(sdf_output[3].split(' ')[1])
+    try:
+        atom_no=int(sdf_output[3].split(' ')[1])
+        
+    except ValueError:
+        atom_no=int(sdf_output[3][:3])
+        
     #bond_no=int(sdf_output[3].split(' ')[2])
     
     len_mol=END_index_list[0]
