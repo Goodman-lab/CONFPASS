@@ -194,11 +194,14 @@ Please see CONFPASS_tutorial.ipynb for the user guide, tutorials and examples. D
 
 Here, we have taken out a simple example from the CONFPASS_tutorial.ipynb as a taster sample:
 
-
+Example 1:
 
 ```python
+
+from confpass import confpass 
+
 ## 1. Generate the priority list for a sdf file from a conformational searching calculation with 
-## the default setting -- x=0.8, x_de=0.2, method = 'pipe_x_de'
+## the default setting -- x=0.8, x_as=0.2, method = 'pipe_x_as'
 
 test1=confpass.conp(['test_15.sdf'])
 test1.get_priority()
@@ -208,6 +211,42 @@ test1.priority_df
 
 
 ```
+
+Example 2:
+
+```python
+
+from confpass import confpass 
+import os 
+
+## 1. Generate the priority list for sdf files in a folder
+## the default setting -- x=0.8, x_as=0.2, method = 'pipe_x_as'
+path = os.getcwd()
+sdf_ls = [f for f in os.listdir(path) if f.endswith('.sdf')]
+
+test1 = confpass.conp(sdf_ls)
+test1.get_priority()
+
+## 2. generate the g16 input files for the first 20% of the conformers in the priority list
+
+keywords = '''%nprocshared=32
+%mem=4GB
+# opt freq b3lyp/6-31g(d) int=ultrafine empiricaldispersion=gd3
+
+Title Card Required
+
+1 1
+'''
+
+space='''
+'''
+
+test1.priority2gjf(keywords, space, 0.2)
+
+
+
+```
+
 
 
 
