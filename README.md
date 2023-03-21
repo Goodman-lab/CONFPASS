@@ -46,7 +46,7 @@ i.e. python -m comfpass
 
 
 * `-m` M: priority list assembling method 
-(choices=('pipe_x_as', 'pipe_x', 'pipe_as', 'nth', 'random', 'ascend'))
+(choices=('pipe_x_as', 'pipe_x', 'pipe_as', 'nth', 'random', 'ascend')); pipe_x_as is equivalent to 'pipeline-mix', which is the notation used in the paper.
 
 
 * `-x` X: hyperparameter for the pipe_x method, default = 0.8
@@ -54,7 +54,7 @@ i.e. python -m comfpass
  
  
 * `--x_as` = X_AS:  hyperparameter for pipe_x_as method, default = 0.2 
-i.e. 20% (pipe_x priority list) + 80%(pipe_as priority list)
+i.e. 20% (pipe_x priority list) + 80%(pipe_as priority list); x_as is equivalent to Q, which is the notation used in the paper. 
 
 
 * `-n` N: hyperparameter for nth method, default = 3 
