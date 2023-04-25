@@ -239,6 +239,25 @@ test1.priority2gjf(keywords, space, 0.2)
 
 ```
 
+Example 3:
 
+```python
+## 8.	Perform the test using the LR model on a result folder. 
+## The priority list is generated using the default setting.
 
+path = os.getcwd()+'/test_15'
+
+test6 = confpass.pas(path)
+test6.preparation()
+test2.make_prediction(repeat=3)
+
+## generate the g16 input file if %conf is less than 85%
+if test6.confidence < 85:
+    print('NEED FURTHER CALCULATIONS!')
+    test6.add_cal( keywords, space, per=0.05)
+    
+    
+    
+
+```
 
