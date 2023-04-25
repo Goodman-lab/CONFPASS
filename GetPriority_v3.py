@@ -276,7 +276,7 @@ class GetPriority:
         
         else:
            
-           print('method not available: please choose from pipe_de, pipe_x, pipe_x_de, descend, nth or random')
+           print('method not available: please choose from pipe_de, pipe_x, pipe_x_as, ascend, nth or random')
             
     
     

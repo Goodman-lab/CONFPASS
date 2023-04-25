@@ -9,10 +9,14 @@ Created on Wed Jun 29 18:25:04 2022
 15082022 - update to change the pas test nor_nx setting and model -- 0.5 --> 0.99
 14092022 - include temperature variable for pas test; check the completion of the optimisation calculation;
             pas.add_cal() function 
+04022023 - introduce the plugin: pas.preparation(chk_structure=False)
+19042023 - introduce repeat parameter pas.make_prediction -- conduct the prediction making process 
+            for x time at reopt (n-x/m) to (n/m); repeat = x
+
             
 """
 
-__version__ = "v14092022"
+__version__ = "v19042023"
 
 import numpy as np
 from datetime import date
@@ -34,6 +38,8 @@ from get_dft_output_v2 import get_g16sdf, get_delG
 from BinsTest_rmsCheck import rmsCheck
 from MolFrac_ML import get_descriptor
 
+import xyz2mol as x2m
+
 today = date.today()
 date_str=today.strftime("%d%m%Y")
 
@@ -45,7 +51,7 @@ class conp:
         
 
     def get_priority(self, x=0.8, x_as=0.2, n=3, method = 'pipe_x_as'):
-        
+
         self.methodf = method
         
         ## perform the clustering calculation 
@@ -125,14 +131,50 @@ class pas:
         self.path = path
         self.molname=path.split('/')[-1]
     
-    def preparation(self, molf='0.99', ra= False, rm_ls=[]):
+    def preparation(self, molf='1', ra= False, rm_ls=[], chk_structure=False, 
+                    p_x=0.8, p_x_as=0.2, p_n=3, p_method = 'pipe_x_as'):
         
         ## extract energy info from g16 output files 
         self.delG_df=get_delG(self.path , get_csv='yes')
         
+        origin_structure_no=len(self.delG_df)
+        structure_no_postchk=len(self.delG_df)
+        
         ## extract structure information from g16 output files 
         get_g16sdf(self.path, radical = ra, rmAtom_ls=rm_ls)
         self.g16sdf_name=self.molname+'_g16.sdf'
+        
+        ## check structures function starts here
+        ### sometimes bond forming or breaking may occur upon reoptimisations at DFT leve
+        ### the below plugin check the structures and separate different chemical systems into different sdf
+        ### associated delG csv is also given and updated for each sdf file
+        ### CONFPASS will be applied on the sdf file with the same chemical system as the sdf at the FF level
+        ### or sdf file with the most conformer (if the previous is not available 
+        ###  We used the script from https://github.com/jensengroup/xyz2mol/blob/master/xyz2mol.py 
+        ### (which is based on the work of Bull. Korean Chem. Soc. 2015, Vol. 36, 1769-1777) to convert xyz coordinates to a rdkit.Chem.mol object.
+        
+        self.chk_structure=chk_structure
+        
+        if chk_structure==True:
+        
+            self.delG_csv_name=self.molname+'_delG.csv'
+            self.sdf_csv_path=self.path +'/'+ self.molname +'.sdf'
+        
+            x2m.mol_separations(self.g16sdf_name,self.delG_csv_name,self.sdf_csv_path)
+            
+            self.delG_df = pd.read_csv(self.delG_csv_name)
+            
+            structure_no_postchk=len(self.delG_df)
+            
+            if structure_no_postchk < origin_structure_no:
+                print(str(structure_no_postchk)+'/'+str(origin_structure_no)+' pass the structure check')
+            
+        
+        self.structure_chk_df=pd.DataFrame({'name':[self.molname],'structure_no_prechk':[origin_structure_no], 'structure_no_postchk':
+                                            [structure_no_postchk]})
+            
+            
+        ## check structures function ends here
         
         ## perform rms calculations 
         get_rmsCheck_df=rmsCheck(self.g16sdf_name, self.delG_df, self.molname)
@@ -140,17 +182,15 @@ class pas:
         self.rmsCheck_cluster_df=get_rmsCheck_df.rmsCheck_cluster_df
         
         ## load the RF model 
-        if molf == '0.1':
-            filename = os.path.abspath(__file__)[:-11]+'RF_model_x01.sav'
+        if molf == '1':
+            filename = os.path.abspath(__file__)[:-11]+'LR_model_24042023_x10.sav'
             self.model = pickle.load(open(filename, 'rb'))
             
-        elif molf == '0.99':
-            filename = os.path.abspath(__file__)[:-11]+'RF_model_x99.sav'
-            self.model = pickle.load(open(filename, 'rb'))
+        #elif molf == '0.99':
+        #    filename = os.path.abspath(__file__)[:-11]+'RF_model_09042023_x99.sav'
+        #    self.model = pickle.load(open(filename, 'rb'))
             
         self.molf = molf
-    
-    def make_prediction(self, p_x=0.8, p_x_as=0.2, p_n=3, p_method = 'pipe_x_as', T=298.15, print_result=True):
         
         
         ## generate the priority list 
@@ -161,70 +201,135 @@ class pas:
         ptest.get_priority(method = p_method, x=p_x, x_as=p_x_as, n= p_n)
         
         self.priority_df=ptest.priority_df
+    
+    
+    
+    def process_prediction(self, label, prob):
         
-        ## generate the descriptor array 
-        descriptor_y, self.reopt_idx_ls =get_descriptor(self.rmsCheck_cluster_df, ptest.priority_df, self.delG_df,temp=T)
-        
-        ## make prediction 
-        label= self.model.predict(descriptor_y)[0]
-        #print(label)
-        prob = list(self.model.predict_log_proba(descriptor_y)[0])
-        
-        
-
+        ## this function is used in the make_prediction function 
+        ## not to be excuted by itself 
         
         completion ='complete'
         
         if label == 1:
-            prob_ratio=prob[1]/prob[0]
+            prob_v=prob[1]
         elif label == 0:
-            prob_ratio=prob[0]/prob[1]
+            prob_v=prob[0]
             
             completion ='incomplete'
         
         self.label = completion
-        self.prob_ratio = round(prob_ratio,3)
+        self.prob_v = round(prob_v,3)
         ## 0 - reoptimisation incomplete 
         ## 1 - reoptimisation completed
         
-        if self.molf =='0.99':
-            para= np.array([-4.44394491e-02, -2.42234719e+00, -2.00607674e+01,  4.93166247e+01])
+        if self.molf =='1':
+            A = -6.293126587013565
             
-        elif self.molf =='0.1':
-            para= np.array([ -0.32609019,  -4.46748268, -23.41373633,  50.15560884])
+       # elif self.molf =='0.1':
+       #     A= -10.83234412
             
         
-        A=para[0]
-        B=para[1]
-        C=para[2]
-        D=para[3]
+        per_conf=(1 / (1 + np.exp(A  * (prob_v -0.5))))*100
         
-        if prob_ratio<= 0.01: 
-            prob_ratio = 0.01
         
-        per_conf=(np.log(prob_ratio)**3)*A+np.log(prob_ratio)**2*B+C*np.log(prob_ratio)+D
-        
-
         if label == 0:
             per_conf2=100-per_conf
-
         else:
             per_conf2=per_conf
 
         self.confidence=round(per_conf2,3)
+        
+        
+    
+    def make_prediction(self, T=298.15, print_result=True, repeat=0):
+        
+        if repeat == 0:
+            pls_len_ls=[None]
+            
+        else:
+            pls_len_ls=[-repeat+i for i in range(repeat)][1:]+[None]
+        
+        
+        label_ls=[]
+        prob_ls=[]
+        
+        for pls in pls_len_ls:
+        
+        
+        ## generate the descriptor array 
+            descriptor_y, self.reopt_idx_ls =get_descriptor(self.rmsCheck_cluster_df, self.priority_df, self.delG_df,temp=T, pls_len=pls)
+        
+        ## make prediction 
+            label= self.model.predict(descriptor_y)[0]
+            label_ls.append(label)
+        #print(label)
+            prob = list(self.model.predict_proba(descriptor_y)[0])
+            prob_ls.append(prob)
+        
+        
+        completion_ls=[]
+        confidence_ls=[]
+        prob_v_ls=[]
+        
+        for l,p in zip(label_ls, prob_ls):
+            
+            self.process_prediction(l, p)
+            completion_ls.append(self.label)
+            confidence_ls.append(self.confidence)
+            prob_v_ls.append(self.prob_v)
+        
+        ## calculate reopt
+        
+        total_conformer_no = len(self.priority_df['priority_ls'].tolist()[0])
+        reoptimized_conf_no = len(self.delG_df)
+        self.current_ropt= round(reoptimized_conf_no/total_conformer_no,3)
         
 
         
         ### print out the result
         if print_result==True:
         
-            print('reoptimisation: '+ completion +'; confidence level: ' + str(self.confidence))
-            print('probability ratio: ' + str(self.prob_ratio))
+            print('reoptimisation: '+ self.label +'; confidence level: ' + str(self.confidence))
+            print('probability: ' + str(self.prob_v))
+            print('current ropt (number of optimised / total number of conformers): '+str(self.current_ropt))
+            
+            if repeat != 0:
+                
+                self.reopt_ls=[round((reoptimized_conf_no-i)/total_conformer_no,3) for i in range(repeat)]
+                self.confidence_ls=confidence_ls
+                print('breakdown: reoptimisation: '+ str(completion_ls)+'; confidence level: '+str(confidence_ls))
+                print( 'ropt list: '+str(self.reopt_ls))
+        
          
         
     def add_cal(self, keywords, space,  radical = False, rmAtom_ls=[], per = 0.1):
         
+        if self.chk_structure==True:
         
+            delG_df = get_delG(self.path , get_csv='no')
+        
+            delG_df['opt'] = [len(i.split('_')) for i in delG_df['name'].tolist()]
+        
+            opt_len_ls = delG_df['opt'].unique().tolist()
+        
+            reopt_idx_ls=[]
+            for i in delG_df['name'].tolist():
+                if len(opt_len_ls)>1:
+                    len_no=len(i.split('_'))
+                    if len_no == np.amax(opt_len_ls):
+                        reopt_idx_ls.append(int(i.split('_')[-2]))
+                    else:
+                        reopt_idx_ls.append(int(i.split('_')[-1]))
+                    
+                else:
+                    reopt_idx_ls.append(int(i.split('_')[-1]))
+                
+        
+            reopt_idx_ls1=[i-1 for i in reopt_idx_ls]
+            self.reopt_idx_ls =reopt_idx_ls1
+        
+
         complete_priority_ls = self.priority_df['priority_ls'].tolist()[0]
         left_ls = [i for i in complete_priority_ls if i not in self.reopt_idx_ls]
         
@@ -264,7 +369,10 @@ class pas:
         file.close()
         
         
-        
+
+
+
+
 #########################################
 ##
 ##             Execution 
@@ -311,8 +419,8 @@ def main():
                   dest='per', default=0.2)
     
     
-    parser.add_option('--mx',dest='mx', help='nor_nx=mx; mol fraction', default='0.99',
-                    choices=('0.1', '0.99'))
+    parser.add_option('--mx',dest='mx', help='nor_nx=mx; mol fraction', default='1',
+                    choices=('1'))
     
     parser.add_option('-T', help='Temperature setting (required for pas test)', 
                   dest='T', default=298.15)

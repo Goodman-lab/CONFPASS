@@ -61,7 +61,7 @@ def get_delG_df(single_p_ls,csv_df,ideal_dict,temperature=298.15):
         
 
 
-def get_n0(mol_ls, cutoff=0.1):
+def get_n0(mol_ls, cutoff=1):
     
     ## given the result, newly introduced mol fraction list
     ## find n0 - the n value at which molfrac no longer deviates from x
@@ -119,7 +119,7 @@ def get_new_mol_data(p_ls,csv_df,ideal_dict,T=298.15):
     ## calculate the descriptors 
     
     
-    _,n0_molfac = get_n0(del_mol_ls, cutoff=0.1)
+    _,n0_molfac = get_n0(del_mol_ls, cutoff=1)
     
     len_del_mol_ls = len(del_mol_ls)
     
@@ -192,7 +192,7 @@ def get_just_norn(p_ls,csv_df,ideal_dict, T=298.15):
         del_mol_ls.append(mol_frac)
         
     
-    _,n0_molfac = get_n0(del_mol_ls, cutoff=0.1)
+    _,n0_molfac = get_n0(del_mol_ls, cutoff=1)
     
     result_df=pd.DataFrame({'n0_molfac':[n0_molfac]})
         
@@ -271,7 +271,7 @@ class MolFraTest_ml:
 ####################
 
 
-def get_descriptor(rmsCheck_df, priority_df, delG_df, temp=298.15):
+def get_descriptor(rmsCheck_df, priority_df, delG_df, temp=298.15, pls_len=None):
     
     ## using class MolFraTest_ml to generate desriptor df for a priority df 
     ## only applicable for one molecule at the time 
@@ -299,7 +299,7 @@ def get_descriptor(rmsCheck_df, priority_df, delG_df, temp=298.15):
     ## priority_df - there should only be one line of data 
     priority_ls = priority_df['priority_ls'][0]
 
-    reopt_idx_ls_sort = [i for i in priority_ls if i in reopt_idx_ls1]
+    reopt_idx_ls_sort = [i for i in priority_ls if i in reopt_idx_ls1][:pls_len]
     
     priority_df_reopt=priority_df.copy()
     priority_df_reopt=priority_df_reopt[['idx']]
