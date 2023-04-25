@@ -25,7 +25,7 @@ The package is written entirely in python and developed under the following envi
 
 A logistic regression model is used in PART 2, class pas.
 
-We used the script from https://github.com/jensengroup/xyz2mol/blob/master/xyz2mol.py (Bull. Korean Chem. Soc. 2015, Vol. 36, 1769-1777) to convert xyz coordinates to a rdkit.Chem.mol object
+We used the script from https://github.com/jensengroup/xyz2mol/blob/master/xyz2mol.py (which is based on the work of Bull. Korean Chem. Soc. 2015, Vol. 36, 1769-1777) to convert xyz coordinates to a rdkit.Chem.mol object
 
 
 ## B.	Installation
