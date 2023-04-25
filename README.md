@@ -77,9 +77,6 @@ i.e. prioritise every 3rd conformer
 
 * `--pas_multi`: predict the completeness of the reoptimisation process; the pas test will be performed on all the folders in the --path specified
 
-
-* `--mx`: There are two choices for the nor_nχ setting: nor_nχ=0.99 or nor_nχ=0.10;  hoices=('0.1', '0.99')
-
 * `--radical`: this commend needs to be included when processing radical molecules (with a different number of atoms compared to the pseudo structure)
 
 * `--rmatom`: list of atoms to be removed – need to be specified when processing radical molecules (with a different number of atoms compared to the pseudo structure)
@@ -174,12 +171,7 @@ Single point energy output file: Name_idx_spe.out
 python -m confpass --path ./test_demo --pas_multi --csv
 ```
 
-10.	Perform the pas test on multiple result folders under the same directory. The priority list is generated using the default setting. Use the nor_nx=0.1 setting (aiming to find all the low energy conformer with ΔG < 1.4 kcal mol-1).
-```python
-python -m confpass --path ./test_demo  --mx 0.1 --pas_multi
- ```
- 
-11.	Perform the pas test on a result folder for a radical species. The priority list is generated using the default setting.
+10.	Perform the pas test on a result folder for a radical species. The priority list is generated using the default setting.
 
 If the radical structure and the pseudo structure from conformational searching are different, you will need to specify the removed atoms. ‘--pas_multi’ setting is currently not available for this type of radical structures.
 
