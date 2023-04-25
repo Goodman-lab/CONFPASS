@@ -22,7 +22,10 @@ The package is written entirely in python and developed under the following envi
 -	RDkit (2019.09.3)
 -	Natsort (8.0.2)
 
-Random forest models are used in PART 2, class pas, with the following setting: {'criterion': 'entropy', 'max_features': 'log2', 'n_estimators': 50}.
+
+A logistic regression model is used in PART 2, class pas.
+
+We used the script from https://github.com/jensengroup/xyz2mol/blob/master/xyz2mol.py (Bull. Korean Chem. Soc. 2015, Vol. 36, 1769-1777) to convert xyz coordinates to a rdkit.Chem.mol object
 
 
 ## B.	Installation
