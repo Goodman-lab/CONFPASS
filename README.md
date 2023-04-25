@@ -2,7 +2,7 @@
 Conformer Prioritizations &amp; Analysis for DFT reoptimisations
 
 
-version: v3 15082022
+version: v4 25042023
 
 
 ## A.	Introduction 
