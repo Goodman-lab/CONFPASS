@@ -498,14 +498,14 @@ def main():
             rmat_ls=json.loads(options.rmatom)
             
             test1 = pas(options.path)
-            test1.preparation(molf=1,ra=True, rm_ls=rmat_ls)
-            test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
+            test1.preparation(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m,ra=True, rm_ls=rmat_ls)
+            test1.make_prediction( T= options.T)
         
         else:
         
             test1 = pas(options.path)
-            test1.preparation(molf=1)
-            test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
+            test1.preparation(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m)
+            test1.make_prediction( T= options.T)
     
     
     elif  options.pas == False and options.pas_multi == True:
@@ -533,8 +533,8 @@ def main():
             try:
                 print(p)
                 test1 = pas(p)
-                test1.preparation(molf=1)
-                test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
+                test1.preparation(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m)
+                test1.make_prediction( T= options.T)
             
                 name_ls.append(test1.molname)
                 label_ls.append(test1.label)
