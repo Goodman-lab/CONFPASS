@@ -110,7 +110,7 @@ python -m confpass *.sdf --csv
 ```python
 python -m confpass *.sdf --per 0.05 --p2gjf 
 ```
-Please ensure that keywords.py is in the same directory as the sdf files.
+Please ensure that keywords.py is in the same directory as the sdf files. (keywords.py is in the /user_guide folder)
 
 Note on the keywords.py: the keywords for DFT calculations are specified using keywords.py 
 
@@ -169,7 +169,7 @@ mol/
 Single point energy output file: Name_idx_spe.out 
 
 
-9.	Perform the pas test on multiple result folders under the same directory. The priority list is generated using the default setting. Generate a csv file to summarise the result.
+9.	Perform the pas test on multiple result folders under the same directory. The priority list is generated using the default setting. Generate a csv file to summarise the result. (Please do not include other irrelavent folders in the specified path)
 ```python
 python -m confpass --path ./test_demo --pas_multi --csv
 ```
