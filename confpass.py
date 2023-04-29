@@ -286,6 +286,10 @@ class pas:
         self.current_ropt= round(reoptimized_conf_no/total_conformer_no,3)
         
 
+        if repeat != 0:
+            self.reopt_ls=[round((reoptimized_conf_no-i)/total_conformer_no,3) for i in range(repeat)]
+            self.confidence_ls=confidence_ls
+
         
         ### print out the result
         if print_result==True:
@@ -296,8 +300,6 @@ class pas:
             
             if repeat != 0:
                 
-                self.reopt_ls=[round((reoptimized_conf_no-i)/total_conformer_no,3) for i in range(repeat)]
-                self.confidence_ls=confidence_ls
                 print('breakdown: reoptimisation: '+ str(completion_ls)+'; confidence level: '+str(confidence_ls))
                 print( 'ropt list: '+str(self.reopt_ls))
         
@@ -419,8 +421,8 @@ def main():
                   dest='per', default=0.2)
     
     
-    parser.add_option('--mx',dest='mx', help='nor_nx=mx; mol fraction', default='1',
-                    choices=('1'))
+    #parser.add_option('--mx',dest='mx', help='nor_nx=mx; mol fraction', default='1',
+    #                choices=('1'))
     
     parser.add_option('-T', help='Temperature setting (required for pas test)', 
                   dest='T', default=298.15)
@@ -496,13 +498,13 @@ def main():
             rmat_ls=json.loads(options.rmatom)
             
             test1 = pas(options.path)
-            test1.preparation(molf=options.mx,ra=True, rm_ls=rmat_ls)
+            test1.preparation(molf=1,ra=True, rm_ls=rmat_ls)
             test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
         
         else:
         
             test1 = pas(options.path)
-            test1.preparation(molf=options.mx)
+            test1.preparation(molf=1)
             test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
     
     
@@ -531,7 +533,7 @@ def main():
             try:
                 print(p)
                 test1 = pas(p)
-                test1.preparation(molf=options.mx)
+                test1.preparation(molf=1)
                 test1.make_prediction(p_x=float(options.x), p_x_as=float(options.x_as), p_n=int(options.n), p_method = options.m, T= options.T)
             
                 name_ls.append(test1.molname)
