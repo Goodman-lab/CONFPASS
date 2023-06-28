@@ -41,7 +41,7 @@ To be available soon
 ## D.	Usage - Option 1: Execution as a command line
 
 
-i.e. python -m comfpass 
+i.e. python -m confpass 
 
 ### Options:
 
