@@ -36,7 +36,7 @@ We used the script from https://github.com/jensengroup/xyz2mol/blob/master/xyz2m
 
 ## C.	Citing CONFPASS 
 
-1.	C. C. Lam, J. M. Goodman, CONFPASS: fast DFT re-optimisations of structures from conformation searches; just accepted by Journal of Chemical Information and Modelling: 10.26434/chemrxiv-2023-vhlgg
+1.	C. C. Lam and J. M. Goodman, J. Chem. Inf. Model., 2023, 63, 4364–4375 (DOI:10.1021/acs.jcim.3c00649; 10.26434/chemrxiv-2023-vhlgg)
 
 
 ## D.	Usage - Option 1: Execution as a command line
